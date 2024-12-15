@@ -1,3 +1,4 @@
+local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
 
@@ -15,7 +16,7 @@ local function SpawnSH()
 	local TweenService = game:GetService("TweenService")
 	local Lp = game.Players.LocalPlayer
 	local PlayerGui = Lp.PlayerGui
-
+	
 	local Gui = Instance.new("ScreenGui", CoreGui)
 	local Frame = Instance.new("Frame", Gui)
 	local UiDrag = Instance.new("UIDragDetector", Frame)
@@ -24,6 +25,7 @@ local function SpawnSH()
 	local BringPart = Instance.new("TextBox", Frame)
 	local BringAllPart = Instance.new("TextBox", Frame)
 	local TweenToPlr = Instance.new("TextBox", Frame)
+	local FlyTool = Instance.new("TextButton", Frame)
 	
 	--//Properties
 	Gui.Name = "Framework"
@@ -59,6 +61,12 @@ local function SpawnSH()
 	TweenToPlr:SetAttribute("Desc", 'Tween To Player')
 	TweenToPlr.TextScaled = true
 	
+	FlyTool.Name = "FlyTool"
+	FlyTool.Text = "Fly Tool"
+	FlyTool.Size = UDim2.new(0, 200, 0, 50)
+	FlyTool:SetAttribute("Desc", "Fly Tool")
+	FlyTool.TextScaled = true
+	
 	--//Main Script
 	for _, v in pairs(Frame:GetChildren()) do
 		if v:IsA("TextButton") then
@@ -77,6 +85,52 @@ local function SpawnSH()
 						Tween:Play()
 						Tween.Completed:Connect(function()
 							Lp.Character.HumanoidRootPart.Anchored = false
+						end)
+					end)
+				elseif v.Name == FlyTool.Name then
+					local FlyTool = Instance.new("Tool", Lp.Backpack)
+					FlyTool.Name = "FlyTool"
+					FlyTool.RequiresHandle = false
+					
+					FlyTool.Equipped:Connect(function()
+						local flyActive = true
+						local Params = RaycastParams.new()
+						Params.FilterType = Enum.RaycastFilterType.Blacklist
+						
+						local function blacklist()
+							local blacklist = {}
+							table.insert(blacklist, Lp.Character)
+							Params.FilterDescendantsInstances = blacklist
+						end
+						
+						local function update()
+							if not flyActive then return end
+							local connection
+							
+							local HumanoidRootPart = Lp.Character:FindFirstChild("Head")
+							blacklist()
+							if HumanoidRootPart then
+								local CameraPos = workspace.CurrentCamera.CFrame.Position
+								local CameraDir = workspace.CurrentCamera.CFrame.LookVector
+								
+								local rayPos = CameraPos
+								local rayDir = CameraDir * 100
+								
+								local result = workspace:Raycast(rayPos, rayDir, Params)
+								
+								local targetPos
+								if result then
+									targetPos = result.Position
+								end
+								HumanoidRootPart.CFrame = CFrame.new(HumanoidRootPart.Position, targetPos)
+							end
+						end
+						
+						local heartbeatConnection = RunService.RenderStepped:Connect(update)
+						
+						FlyTool.Unequipped:Connect(function()
+							flyActive = false
+							heartbeatConnection:Disconnect()
 						end)
 					end)
 				end
@@ -149,7 +203,7 @@ local function SpawnSH()
 			TweenToPlr.Text = TweenToPlr:GetAttribute("Desc")
 		end
 	end)
-
+	
 	local function toogle()
 		enabled = not enabled
 		Gui.Enabled = enabled
