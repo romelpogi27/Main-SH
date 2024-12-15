@@ -27,9 +27,7 @@ local function SpawnSH()
 	local BringPart = Instance.new("TextBox", Frame)
 	local BringAllPart = Instance.new("TextBox", Frame)
 	local TweenToPlr = Instance.new("TextBox", Frame)
-	local FlyTool = Instance.new("TextButton", Frame)
 	local Rejoin = Instance.new("TextButton", Frame)
-	local Dex = Instance.new("TextButton", Frame)
 	
 	--//Properties
 	Gui.Name = "Framework"
