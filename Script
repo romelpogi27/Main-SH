@@ -1,15 +1,17 @@
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local CoreGui = game:GetService("CoreGui")
-
 local function SpawnSH()
 	_G.Enabled = true
+	local CoreGui = game:GetService("CoreGui")
 	
 	for _, v in pairs(CoreGui:GetChildren()) do
 		if v:IsA("ScreenGui") and v.Name == "ScriptH" then
 			v:Destroy()
 		end
 	end
+	
+	--//Services
+	local TeleportService = game:GetService("TeleportService")
+	local RunService = game:GetService("RunService")
+	local UserInputService = game:GetService("UserInputService")
 	
 	--//Variables
 	local enabled = true
@@ -26,6 +28,8 @@ local function SpawnSH()
 	local BringAllPart = Instance.new("TextBox", Frame)
 	local TweenToPlr = Instance.new("TextBox", Frame)
 	local FlyTool = Instance.new("TextButton", Frame)
+	local Rejoin = Instance.new("TextButton", Frame)
+	local Dex = Instance.new("TextButton", Frame)
 	
 	--//Properties
 	Gui.Name = "Framework"
@@ -40,103 +44,109 @@ local function SpawnSH()
 	
 	TweenTool.Name = "TweenTool"
 	TweenTool.Text = "Tween Tool"
-	TweenTool.Size = UDim2.new(0, 200,0, 50)
 	TweenTool.TextScaled = true
 	
 	BringPart.Name = "BringPart"
 	BringPart.Text = "Tween Bring Part!"
-	BringPart.Size = UDim2.new(0, 200,0, 50)
 	BringPart.TextScaled = true
 	BringPart:SetAttribute("Desc", 'Tween Bring Part!')
 	
 	BringAllPart.Name = "BringAllPart"
 	BringAllPart.Text = "Tween Bring All Part!"
-	BringAllPart.Size = UDim2.new(0, 200,0, 50)
 	BringAllPart:SetAttribute("Desc", 'Tween Bring All Part')
 	BringAllPart.TextScaled = true
 	
 	TweenToPlr.Name = "BringAllPart"
 	TweenToPlr.Text = "Tween To Player"
-	TweenToPlr.Size = UDim2.new(0, 200,0, 50)
 	TweenToPlr:SetAttribute("Desc", 'Tween To Player')
 	TweenToPlr.TextScaled = true
 	
 	FlyTool.Name = "FlyTool"
 	FlyTool.Text = "Fly Tool"
-	FlyTool.Size = UDim2.new(0, 200, 0, 50)
-	FlyTool:SetAttribute("Desc", "Fly Tool")
 	FlyTool.TextScaled = true
 	
+	Rejoin.Name = "Rejoin"
+	Rejoin.Text = "Rejoin"
+	Rejoin.TextScaled = true
+	
+	Dex.Name = "Dex"
+	Dex.Text = "Dex"
+	Dex.TextScaled = true
+	
 	--//Main Script
-	for _, v in pairs(Frame:GetChildren()) do
-		if v:IsA("TextButton") then
-			v.Activated:Connect(function()
-				if v.Name == TweenTool.Name then
-					local Tool = Instance.new("Tool", Lp.Backpack)
-					Tool.Name = "TweenTool"
-					Tool.RequiresHandle = false
+	TweenTool.Activated:Connect(function()
+		local Tool = Instance.new("Tool", Lp.Backpack)
+		Tool.Name = "TweenTool"
+		Tool.RequiresHandle = false
 
-					Tool.Activated:Connect(function()
-						Lp.Character.HumanoidRootPart.Anchored = true
-						local Mouse = Lp:GetMouse()
-						local MousePos = Mouse.Hit.Position + Vector3.new(0, 2.5, 0)
+		Tool.Activated:Connect(function()
+			Lp.Character.HumanoidRootPart.Anchored = true
+			local Mouse = Lp:GetMouse()
+			local MousePos = Mouse.Hit.Position + Vector3.new(0, 2.5, 0)
 
-						local Tween = TweenService:Create(Lp.Character.HumanoidRootPart, TweenInfo.new(3), {CFrame = CFrame.new(MousePos)})
-						Tween:Play()
-						Tween.Completed:Connect(function()
-							Lp.Character.HumanoidRootPart.Anchored = false
-						end)
-					end)
-				elseif v.Name == FlyTool.Name then
-					local FlyTool = Instance.new("Tool", Lp.Backpack)
-					FlyTool.Name = "FlyTool"
-					FlyTool.RequiresHandle = false
-					
-					FlyTool.Equipped:Connect(function()
-						local flyActive = true
-						local Params = RaycastParams.new()
-						Params.FilterType = Enum.RaycastFilterType.Blacklist
-						
-						local function blacklist()
-							local blacklist = {}
-							table.insert(blacklist, Lp.Character)
-							Params.FilterDescendantsInstances = blacklist
-						end
-						
-						local function update()
-							if not flyActive then return end
-							local connection
-							
-							local HumanoidRootPart = Lp.Character:FindFirstChild("Head")
-							blacklist()
-							if HumanoidRootPart then
-								local CameraPos = workspace.CurrentCamera.CFrame.Position
-								local CameraDir = workspace.CurrentCamera.CFrame.LookVector
-								
-								local rayPos = CameraPos
-								local rayDir = CameraDir * 100
-								
-								local result = workspace:Raycast(rayPos, rayDir, Params)
-								
-								local targetPos
-								if result then
-									targetPos = result.Position
-								end
-								HumanoidRootPart.CFrame = CFrame.new(HumanoidRootPart.Position, targetPos)
-							end
-						end
-						
-						local heartbeatConnection = RunService.RenderStepped:Connect(update)
-						
-						FlyTool.Unequipped:Connect(function()
-							flyActive = false
-							heartbeatConnection:Disconnect()
-						end)
-					end)
-				end
+			local Tween = TweenService:Create(Lp.Character.HumanoidRootPart, TweenInfo.new(3), {CFrame = CFrame.new(MousePos)})
+			Tween:Play()
+			Tween.Completed:Connect(function()
+				Lp.Character.HumanoidRootPart.Anchored = false
 			end)
-		end
-	end
+		end)
+	end)
+	
+	FlyTool.Activated:Connect(function()
+		local FlyTool = Instance.new("Tool", Lp.Backpack)
+		FlyTool.Name = "FlyTool"
+		FlyTool.RequiresHandle = false
+
+		FlyTool.Equipped:Connect(function()
+			local flyActive = true
+			local Params = RaycastParams.new()
+			Params.FilterType = Enum.RaycastFilterType.Blacklist
+
+			local function blacklist()
+				local blacklist = {}
+				table.insert(blacklist, Lp.Character)
+				Params.FilterDescendantsInstances = blacklist
+			end
+
+			local function update()
+				if not flyActive then return end
+				local connection
+
+				local HumanoidRootPart = Lp.Character:FindFirstChild("Head")
+				blacklist()
+				if HumanoidRootPart then
+					local CameraPos = workspace.CurrentCamera.CFrame.Position
+					local CameraDir = workspace.CurrentCamera.CFrame.LookVector
+
+					local rayPos = CameraPos
+					local rayDir = CameraDir * 100
+
+					local result = workspace:Raycast(rayPos, rayDir, Params)
+
+					local targetPos
+					if result then
+						targetPos = result.Position
+					end
+					HumanoidRootPart.CFrame = CFrame.new(HumanoidRootPart.Position, targetPos)
+				end
+			end
+
+			local heartbeatConnection = RunService.RenderStepped:Connect(update)
+
+			FlyTool.Unequipped:Connect(function()
+				flyActive = false
+				heartbeatConnection:Disconnect()
+			end)
+		end)
+	end)
+	
+	Rejoin.Activated:Connect(function()
+		TeleportService:Teleport(game.PlaceId, Lp)
+	end)
+	
+	Dex.Activated:Connect(function()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/romelpogi27/Main-SH/refs/heads/main/Dex"))
+	end)
 
 	BringPart.FocusLost:Connect(function(enterPressed)
 		if enterPressed then
