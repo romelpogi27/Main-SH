@@ -28,6 +28,8 @@ local function SpawnSH()
 	local BringAllPart = Instance.new("TextBox", Frame)
 	local TweenToPlr = Instance.new("TextBox", Frame)
 	local Rejoin = Instance.new("TextButton", Frame)
+	local Highlight = Instance.new("TextButton", Frame)
+	local ServerHop = Instance.new("TextButton", Frame)
 	
 	--//Properties
 	Gui.Name = "Framework"
@@ -63,7 +65,16 @@ local function SpawnSH()
 	Rejoin.Text = "Rejoin"
 	Rejoin.TextScaled = true
 	
-	--//Main Script
+	Highlight.Name = "Highlight"
+	Highlight.Text = "Un/Highlight All"
+	Highlight.TextScaled = true
+	
+	ServerHop.Name = "SHop"
+	ServerHop.Text = "S.Hop"
+	ServerHop.TextScaled = true
+	
+	--//TexButton's
+	
 	TweenTool.Activated:Connect(function()
 		local Tool = Instance.new("Tool", Lp.Backpack)
 		Tool.Name = "TweenTool"
@@ -85,12 +96,45 @@ local function SpawnSH()
 	Rejoin.Activated:Connect(function()
 		TeleportService:Teleport(game.PlaceId, Lp)
 	end)
+	
+	local highlightActive = false
 
+	Highlight.Activated:Connect(function()
+		highlightActive = not highlightActive
+		if highlightActive then
+			for _, player in pairs(game.Players:GetPlayers()) do
+				if player.Character then
+					local highlightExists = player.Character:FindFirstChild("H")
+					if not highlightExists then
+						local Highlight = Instance.new("Highlight")
+						Highlight.Name = "H"
+						Highlight.Parent = player.Character
+						Highlight.FillTransparency = 0.5
+						Highlight.OutlineTransparency = 0
+						Highlight.Enabled = true
+					end
+				end
+			end
+		else
+			for _, v in pairs(workspace:GetDescendants()) do
+				if v:IsA("Model") and v:FindFirstChild("H") then
+					v.H:Destroy()
+				end
+			end
+		end
+	end)
+	
+	ServerHop.Activated:Connect(function()
+		
+	end)
+	
+	--//TextBox's
+	
 	BringPart.FocusLost:Connect(function(enterPressed)
 		if enterPressed then
 			local partName = BringPart.Text
 			local part = game.Workspace:FindFirstChild(partName)
-
+			
 			if not part.PrimaryPart then
 				local Tween = TweenService:Create(part, TweenInfo.new(3), {CFrame = Lp.Character.HumanoidRootPart.CFrame})
 				Tween:Play()
@@ -100,11 +144,11 @@ local function SpawnSH()
 			else
 				print("no work")
 			end
-
+			
 			BringPart.Text = BringPart:GetAttribute("Desc")
 		end
 	end)
-
+	
 	BringAllPart.FocusLost:Connect(function(enterPressed)
 		if enterPressed then
 			local PartN = BringAllPart.Text
@@ -122,20 +166,20 @@ local function SpawnSH()
 			BringAllPart.Text = BringAllPart:GetAttribute("Desc")
 		end
 	end)
-
+	
 	TweenToPlr.FocusLost:Connect(function(enterPressed)
 		if enterPressed then
 			local partialName = TweenToPlr.Text
 			if partialName and partialName ~= "" then
 				local foundPlayer = nil
-
+				
 				for _, player in pairs(game.Players:GetPlayers()) do
 					if string.find(player.Name:lower(), partialName:lower(), 1, true) then
 						foundPlayer = player
 						break
 					end
 				end
-
+				
 				if foundPlayer and foundPlayer.Character and foundPlayer.Character:FindFirstChild("HumanoidRootPart") then
 					local targetPosition = foundPlayer.Character.HumanoidRootPart.CFrame
 					local Tween = TweenService:Create(
