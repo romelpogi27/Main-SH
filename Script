@@ -17,47 +17,48 @@ local function SpawnSH()
 	local PlayerGui = Lp.PlayerGui
 
 	local Gui = Instance.new("ScreenGui", CoreGui)
+	local Frame = Instance.new("Frame", Gui)
+	local UiDrag = Instance.new("UIDragDetector", Frame)
+	local GridLay = Instance.new("UIGridLayout", Frame)
+	local TweenTool = Instance.new("TextButton", Frame)
+	local BringPart = Instance.new("TextBox", Frame)
+	local BringAllPart = Instance.new("TextBox", Frame)
+	local TweenToPlr = Instance.new("TextBox", Frame)
+	
+	--//Properties
 	Gui.Name = "Framework"
 	Gui.Enabled = enabled
 	Gui.Name = "ScriptH"
-
-	local Frame = Instance.new("Frame", Gui)
+	
 	Frame.Name = "Frame"
 	Frame.Visible = true
 	Frame.Active = true
 	Frame.Size = UDim2.new(0, 800, 0, 500)
 	Frame.Position = UDim2.new(0.171, 62, 0.208, -22)
-
-	local UiDrag = Instance.new("UIDragDetector", Frame)
-	local GridLay = Instance.new("UIGridLayout", Frame)
-
-	local TweenTool = Instance.new("TextButton", Frame)
+	
 	TweenTool.Name = "TweenTool"
 	TweenTool.Text = "Tween Tool"
 	TweenTool.Size = UDim2.new(0, 200,0, 50)
 	TweenTool.TextScaled = true
-
-	local BringPart = Instance.new("TextBox", Frame)
+	
 	BringPart.Name = "BringPart"
 	BringPart.Text = "Tween Bring Part!"
 	BringPart.Size = UDim2.new(0, 200,0, 50)
 	BringPart.TextScaled = true
 	BringPart:SetAttribute("Desc", 'Tween Bring Part!')
-
-	local BringAllPart = Instance.new("TextBox", Frame)
+	
 	BringAllPart.Name = "BringAllPart"
 	BringAllPart.Text = "Tween Bring All Part!"
 	BringAllPart.Size = UDim2.new(0, 200,0, 50)
 	BringAllPart:SetAttribute("Desc", 'Tween Bring All Part')
 	BringAllPart.TextScaled = true
-
-	local TweenToPlr = Instance.new("TextBox", Frame)
+	
 	TweenToPlr.Name = "BringAllPart"
 	TweenToPlr.Text = "Tween To Player"
 	TweenToPlr.Size = UDim2.new(0, 200,0, 50)
 	TweenToPlr:SetAttribute("Desc", 'Tween To Player')
 	TweenToPlr.TextScaled = true
-
+	
 	--//Main Script
 	for _, v in pairs(Frame:GetChildren()) do
 		if v:IsA("TextButton") then
