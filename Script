@@ -30,6 +30,7 @@ local function SpawnSH()
 	local Rejoin = Instance.new("TextButton", Frame)
 	local Highlight = Instance.new("TextButton", Frame)
 	local ServerHop = Instance.new("TextButton", Frame)
+	local LoopFB = Instance.new("TextButton", Frame)
 	
 	--//Properties
 	Gui.Name = "Framework"
@@ -73,6 +74,10 @@ local function SpawnSH()
 	ServerHop.Text = "S.Hop"
 	ServerHop.TextScaled = true
 	
+	LoopFB.Name = "LoopFB"
+	LoopFB.Text = "LoopFB"
+	LoopFB.TextScaled = true
+	
 	--//TexButton's
 	
 	TweenTool.Activated:Connect(function()
@@ -98,30 +103,60 @@ local function SpawnSH()
 	end)
 	
 	local highlightActive = false
-
+	local highlightCoroutine = nil
+	
 	Highlight.Activated:Connect(function()
 		highlightActive = not highlightActive
+		
 		if highlightActive then
-			for _, player in pairs(game.Players:GetPlayers()) do
-				if player.Character then
-					local highlightExists = player.Character:FindFirstChild("H")
-					if not highlightExists then
-						local Highlight = Instance.new("Highlight")
-						Highlight.Name = "H"
-						Highlight.Parent = player.Character
-						Highlight.FillTransparency = 0.5
-						Highlight.OutlineTransparency = 0
-						Highlight.Enabled = true
+			highlightCoroutine = coroutine.create(function()
+				while highlightActive do
+					for _, player in pairs(game.Players:GetPlayers()) do
+						if player.Character then
+							local highlightExists = player.Character:FindFirstChild("H")
+							if not highlightExists then
+								local Highlight = Instance.new("Highlight")
+								Highlight.Name = "H"
+								Highlight.Parent = player.Character
+								Highlight.FillTransparency = 0.5
+								Highlight.OutlineTransparency = 0
+								Highlight.Enabled = true
+								
+								if player.Team then
+									Highlight.FillColor = player.Team.TeamColor.Color
+									Highlight.OutlineColor = player.Team.TeamColor.Color
+								end
+							end
+						end
 					end
+					wait(0.5)
 				end
-			end
+			end)
+			
+			coroutine.resume(highlightCoroutine)
 		else
+			if highlightCoroutine then
+				highlightActive = false
+				coroutine.close(highlightCoroutine)
+			end
+			
 			for _, v in pairs(workspace:GetDescendants()) do
 				if v:IsA("Model") and v:FindFirstChild("H") then
 					v.H:Destroy()
 				end
 			end
 		end
+	end)
+	
+	LoopFB.Activated:Connect(function()
+		local Lighting = game:GetService("Lighting")
+
+		coroutine.wrap(function()
+			while true do
+				Lighting.TimeOfDay = "14:00:00"
+				task.wait()
+			end
+		end)()
 	end)
 	
 	ServerHop.Activated:Connect(function()
@@ -202,7 +237,7 @@ local function SpawnSH()
 	end
 
 	UserInputService.InputBegan:Connect(function(input)
-		if input.KeyCode == Enum.KeyCode.LeftControl then
+		if input.KeyCode == Enum.KeyCode.RightShift then
 			toogle()
 		end
 	end)
