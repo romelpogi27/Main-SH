@@ -9,5 +9,3 @@ local registry = getreg()
                 end
             end
         end
-
-        print("Anti Kick Method 1 Initialized. (Registry Method)")
