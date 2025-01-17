@@ -7,5 +7,3 @@ local old
             end
             return old(self, ...)
         end)
-
-        print("Anti Kick Method 1 Initialized. (Namecall Method)")
