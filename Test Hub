@@ -1,0 +1,490 @@
+if _G.Enabled then
+    warn("Romel Hub is already running! |", "Failed")
+    return
+end
+
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
+
+--//Services
+
+local TweenService: TweenService = game:GetService("TweenService")
+local Players: Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local TeleportService = game:GetService("TeleportService")
+local VirtualUser = game:GetService("VirtualUser")
+local UserInputService = game:GetService("UserInputService")
+
+--//Variables
+local LocalPlayer: Player = Players.LocalPlayer
+local Character: Model = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+local Humanoid = Character:WaitForChild("Humanoid")
+local RMouse = LocalPlayer:GetMouse()
+local Debounce = false
+local pos1 = UDim2.new(1, -20, 1, 0)
+local pos2 = UDim2.new(1, -20, 1, 200)
+local tween1
+local tween2
+local TweenToolInfo: TweenInfo = TweenInfo.new(1)
+
+--//Instances
+
+local SkibidiHub: ScreenGui = Instance.new("ScreenGui")
+local Holder: TextLabel = Instance.new("TextLabel")
+local Frame = Instance.new("Frame")
+local TextBox = Instance.new("TextBox")
+local ScrollingFrame = Instance.new("ScrollingFrame")
+local UIListLayout = Instance.new("UIListLayout")
+
+--//Important
+
+function randomString()
+	local length = math.random(10,20)
+	local array = {}
+	for i = 1, length do
+		array[i] = string.char(math.random(32, 126))
+	end
+	return table.concat(array)
+end
+
+--//Properties
+
+SkibidiHub.Name = randomString()
+SkibidiHub.Parent = CoreGui
+SkibidiHub.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+Frame.Parent = SkibidiHub
+Frame.AnchorPoint = Vector2.new(1, 1)
+Frame.BackgroundColor3 = Color3.fromRGB(99, 99, 99)
+Frame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Frame.BorderSizePixel = 0
+Frame.Position = pos2
+Frame.Size = UDim2.new(0, 250, 0, 220)
+
+Holder.Parent = Frame
+Holder.BackgroundColor3 = Color3.fromRGB(65, 65, 65)
+Holder.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Holder.BorderSizePixel = 0
+Holder.Size = UDim2.new(0, 250, 0, 23)
+Holder.Font = Enum.Font.SourceSans
+Holder.Text = "Test Hub V1.0"
+Holder.TextColor3 = Color3.fromRGB(0, 0, 0)
+Holder.TextScaled = true
+Holder.TextSize = 14.000
+Holder.TextWrapped = true
+
+TextBox.Parent = Frame
+TextBox.BackgroundColor3 = Color3.fromRGB(61, 61, 61)
+TextBox.BorderColor3 = Color3.fromRGB(0, 0, 0)
+TextBox.BorderSizePixel = 0
+TextBox.Position = UDim2.new(0, 0, 0.105, 0)
+TextBox.Size = UDim2.new(0, 250, 0, 24)
+TextBox.Font = Enum.Font.SourceSans
+TextBox.Text = ""
+TextBox.TextColor3 = Color3.fromRGB(0, 0, 0)
+TextBox.TextSize = 14.000
+
+ScrollingFrame.Parent = Frame
+ScrollingFrame.Active = true
+ScrollingFrame.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
+ScrollingFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+ScrollingFrame.BorderSizePixel = 0
+ScrollingFrame.Position = UDim2.new(0, 0, 0, 48)
+ScrollingFrame.Size = UDim2.new(1, 0, 1, 0)
+ScrollingFrame.ScrollBarThickness = 0
+
+UIListLayout.Parent = ScrollingFrame
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+tween1 = TweenService:Create(Frame, TweenInfo.new(0.5), { Position = pos1 })
+tween2 = TweenService:Create(Frame, TweenInfo.new(0.5), { Position = pos2 })
+
+--// Command System
+
+local cmds = {}
+local lists = {}
+
+function addcmd(name, alias, func, plugin)
+    cmds[#cmds + 1] = {
+        NAME = name:lower(),
+        ALIAS = alias or {},
+        FUNC = func,
+        PLUGIN = plugin
+    }
+end
+
+function executeCommand(input)
+    local args = string.split(input, " ")
+    local lowerInput = args[1]:lower()
+    table.remove(args, 1)
+
+    for _, cmd in ipairs(cmds) do
+        if cmd.NAME == lowerInput or table.find(cmd.ALIAS, lowerInput) then
+            cmd.FUNC(unpack(args))
+            print(cmd.NAME .. " executed!", "Args:", table.concat(args, ", "))
+            return
+        end 
+    end
+
+    warn("Command not found:", input)
+end
+
+--// Commands
+
+addcmd("deleteselectedtool", {"dst"}, function()
+    for i, v in pairs(Character:GetDescendants()) do
+        if v:IsA("Tool") or v:IsA("HopperBin") then
+            v:Destroy()
+        end
+    end
+end)
+
+addcmd("tweentool", {"tt"}, function()
+    local Tool = Instance.new("Tool")
+    Tool.RequiresHandle = false
+    Tool.Name = "TweenTool"
+    Tool.Parent = Character
+
+    Tool.Activated:Connect(function()
+        if Debounce then return end
+        Debounce = true
+
+        local Mouse = RMouse
+        local MousePos = Mouse.Hit.Position + Vector3.new(0, 2.5, 0)
+
+        HumanoidRootPart.Anchored = true
+
+        local Tween = TweenService:Create(HumanoidRootPart, TweenToolInfo, { CFrame = CFrame.new(MousePos) })
+        Tween:Play()
+
+        Tween.Completed:Connect(function()
+            Debounce = false
+            HumanoidRootPart.Anchored = false
+        end)
+    end)
+end)
+
+addcmd("rejoin", {"rj"}, function()
+	if #Players:GetPlayers() <= 1 then
+		Players.LocalPlayer:Kick("\nRejoining...")
+		wait()
+		TeleportService:Teleport(game.PlaceId, Players.LocalPlayer)
+	else
+		TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, Players.LocalPlayer)
+	end
+end)
+
+addcmd("serverhop", {"sh"}, function()
+    TeleportService:Teleport(game.PlaceId)
+end)
+
+addcmd("antiafk", {"aa"}, function()
+    LocalPlayer.Idled:Connect(function()
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new(0, 0))
+    end)
+end)
+
+addcmd("highlightall", {"ha"}, function()
+    local highlightActive = false
+
+    if not highlightActive then
+        highlightActive = true
+        for _, player in pairs(Players:GetPlayers()) do
+            if player.Character then
+                local highlightExists = player.Character:FindFirstChild("H")
+                if not highlightExists then
+                    local Highlight = Instance.new("Highlight")
+                    Highlight.Name = "H"
+                    Highlight.Parent = player.Character
+                    Highlight.FillTransparency = 0.5
+                    Highlight.OutlineTransparency = 0
+                    Highlight.Enabled = true
+                end
+            end
+        end
+    else
+        highlightActive = false
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("Model") then
+                if v:FindFirstChild("H") then
+                    v.H:Destroy()
+                end
+            end
+        end
+    end
+end)
+
+addcmd("bringallpart", {"baa"}, function()
+    for _, v in pairs(workspace:GetDescendants()) do
+        if v:IsA("BasePart") and v.Anchored == false then
+            local tween = TweenService:Create(v, TweenToolInfo, { CFrame = HumanoidRootPart.CFrame })
+            tween:Play()
+        end
+    end
+end)
+
+addcmd("exit", {}, function()
+    game:Shutdown()
+end)
+
+addcmd("tweeninfo", {"ti"}, function(speed)
+    local num = tonumber(speed)
+
+    TweenToolInfo = TweenInfo.new(num)
+end)
+
+addcmd("print", {}, function(...)
+    print("Print Command Output:", ...)
+end)
+
+addcmd("god", {}, function()
+    Humanoid.MaxHealth = math.huge
+    Humanoid.Health = math.huge
+    print("You are now invincible!")
+end)
+
+addcmd("freezeall", {"fa"}, function()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            player.Character.HumanoidRootPart.Anchored = true
+        end
+    end
+end)
+
+addcmd("unfreezeall", {"ufa"}, function()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            player.Character.HumanoidRootPart.Anchored = false
+        end
+    end
+end)
+
+addcmd("walkspeed", {"ws"}, function(speed)
+    local speedNumber = tonumber(speed) or 16
+    Humanoid.WalkSpeed = speedNumber
+    print("Walkspeed set to:", speedNumber)
+end)
+
+addcmd("jumppower", {"jp"}, function(power)
+    local powerNumber = tonumber(power) or 50
+    Humanoid.JumpPower = powerNumber
+    print("JumpPower set to:", powerNumber)
+end)
+
+addcmd("teleport", {"tp"}, function(playerName)
+    for _, player in pairs(Players:GetPlayers()) do
+        if player.Name:lower() == playerName:lower() and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame
+            print("Teleported to:", player.Name)
+            return
+        end
+    end
+    print("Player not found:", playerName)
+end)
+
+addcmd("hitboxall", {"hba"}, function(size)
+    local hitboxSize = tonumber(size) or 2
+    for _, player in pairs(Players:GetPlayers()) do
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character.Name ~= Character.Name then
+            local humanoidRootPart = player.Character.HumanoidRootPart
+            humanoidRootPart.Size = Vector3.new(hitboxSize, hitboxSize, hitboxSize)
+            humanoidRootPart.Transparency = 0.5
+            humanoidRootPart.Material = Enum.Material.Neon
+            humanoidRootPart.CanCollide = false
+        end
+    end
+    print("Hitboxes increased to size:", hitboxSize)
+end)
+
+addcmd("dex", {}, function()
+    loadstring(game:HttpGet('https://raw.githubusercontent.com/MassiveHubs/loadstring/refs/heads/main/DexXenoAndRezware'))()   
+end)
+
+local autojump
+
+addcmd("autojump", {"aj"}, function()
+    Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+
+    autojump = task.spawn(function()
+        while task.wait(0.6) do
+            Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end)
+end)
+
+addcmd("unautojump", {"uaj"}, function()
+    if autojump then
+        task.cancel(autojump)
+        autojump = nil
+    end
+end)
+
+addcmd("antikickmethod", {"akm"}, function(method)
+    if method == "1" then
+        local old
+        old = hookmetamethod(game, "__namecall", function(self, ...)
+            local method = tostring(getnamecallmethod())
+            if string.lower(method) == "kick" then
+                warn("Kick Blocked.")
+                return nil
+            end
+            return old(self, ...)
+        end)
+
+        print("Anti Kick Method 1 Initialized. (Namecall Method)")
+    elseif method == "2" then
+        local registry = getreg()
+
+        for _, v in next, registry do
+            if type(v) == 'function' then
+                local funcinfo = getinfo(v)
+                if funcinfo.name == 'kick' then
+                    hookfunction(funcinfo.func,function(...) return nil end)
+                    print("hooked")
+                end
+            end
+        end
+    end
+end)
+
+--//Labels
+
+lists[#lists + 1] = {NAME = 'DeleteSelectedTool / Dst', DESC = 'Deletes Your Currently Holding Tool'}
+lists[#lists + 1] = {NAME = 'TweenTool / Tt', DESC = 'Gives A Tool That Tweens Yoour Character To Your Mouse Position'}
+lists[#lists + 1] = {NAME = 'Rejoin / Rj', DESC = 'Rejoins the same server'}
+lists[#lists + 1] = {NAME = 'Serverhop / Sh', DESC = 'Hops onto the same game but different server'}
+lists[#lists + 1] = {NAME = 'AntiAfk / Aa', DESC = 'Prevents being kicked from being afk'}
+lists[#lists + 1] = {NAME = 'BringAllPart / Baa', DESC = 'Brings all unanchored parts to you'}
+lists[#lists + 1] = {NAME = "TweenInfo / Ti [Number]", DESC = "Sets the TweenInfo time (Usage: tweeninfo <number>)"}
+lists[#lists + 1] = {NAME = "Print [String]", DESC = "Prints text to the output (Usage: print <text>)"}
+lists[#lists + 1] = {NAME = "God", DESC = "Enables invincibility"}
+lists[#lists + 1] = {NAME = "FreezeAll / Fa", DESC = "Freezes all players except you"}
+lists[#lists + 1] = {NAME = "UnfreezeAll / Ufa", DESC = "Unfreezes all frozen players"}
+lists[#lists + 1] = {NAME = "WalkSpeed / Ws [Number]", DESC = "Sets your walkspeed (Usage: walkspeed <number>)"}
+lists[#lists + 1] = {NAME = "JumpPower / Jp [Number]", DESC = "Sets your jump power (Usage: jumppower <number>)"}
+lists[#lists + 1] = {NAME = "Teleport / Tp", DESC = "Teleports you to a player (Usage: teleport <playerName>)"}
+lists[#lists + 1] = {NAME = "HitboxAll / Hba [Number]", DESC = "Increases all players' hitboxes (Usage: hitboxall <size>)"}
+lists[#lists + 1] = {NAME = "Dex", DESC = "Opens Dex Explorer"}
+lists[#lists + 1] = {NAME = "AutoJump / Aj", DESC = "Makes Your Humanoid Auto Jump"}
+lists[#lists + 1] = {NAME = "UnAutoJump", DESC = "Disconnects AutoJump"}
+lists[#lists + 1] = {NAME = "AntiKickMethod / Akm [Method (Number()]", DESC = "Makes You Unable To Be Kicked By Any Local Script Kick"}
+
+--//Label Adder
+
+function createLabel(name: string, desc: string)
+    local label: TextLabel = Instance.new("TextLabel")
+
+    label.Name = randomString()
+    label.Parent = ScrollingFrame
+    label.BackgroundTransparency = 1
+    label.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    label.BorderSizePixel = 0
+    label.Size = UDim2.new(0, 250, 0, 23)
+    label.Font = Enum.Font.SourceSans
+    label.Text = name
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.TextSize = 14.000
+    label.TextScaled = true
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local tooltip = Instance.new("TextLabel")
+    tooltip.Name = randomString()
+    tooltip.Parent = label
+    tooltip.BackgroundTransparency = 0.8
+    tooltip.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    tooltip.BorderSizePixel = 0
+    tooltip.Size = UDim2.new(1, 0, 1, 0)
+    tooltip.Position = UDim2.new(0, RMouse.X, 0, RMouse.Y)
+    tooltip.Visible = false
+    tooltip.Font = Enum.Font.SourceSans
+    tooltip.Text = desc
+    tooltip.TextColor3 = Color3.fromRGB(255, 255, 255)
+    tooltip.TextSize = 12
+    tooltip.TextWrapped = true
+    tooltip.TextScaled = true
+    
+    label.MouseEnter:Connect(function()
+        tooltip.Visible = true
+    end)
+    label.MouseLeave:Connect(function()
+        tooltip.Visible = false
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            if tooltip.Visible then
+                tooltip.Position = UDim2.new(0, input.Position.X + 10, 0, input.Position.Y + 10)
+            end
+        end
+    end)
+end
+
+for _, v in ipairs(lists) do
+    createLabel(v.NAME, v.DESC)
+end
+
+--//Handlers
+
+TextBox.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        executeCommand(TextBox.Text)
+        task.wait()
+        tween2:Play()
+        TextBox.Text = ""
+    end
+end)
+
+UserInputService.InputBegan:Connect(function(i, b)
+	if b then return end
+
+	if i.KeyCode == Enum.KeyCode.Semicolon then
+		TextBox:CaptureFocus()
+        task.wait()
+        tween1:Play()
+		TextBox.Text = ""
+	end
+end)
+
+function Enter()
+    if Frame.Position ~= pos1 then
+        tween1:Play()
+    end
+end
+
+function Leave()
+    if Frame.Position ~= pos2 then
+        tween2:Play()
+    end
+end
+
+Frame.MouseEnter:Connect(function()
+    Enter()
+end)
+
+Frame.MouseLeave:Connect(function()
+    Leave()
+end)
+
+function FindText()
+    local text: string = TextBox.Text:lower()
+    local children = ScrollingFrame:GetChildren()
+
+    for _, child in ipairs(children) do
+        if child:IsA("TextLabel") then
+            child.Visible = false
+            local labelText: string = child.Text:lower()
+            if labelText:find(text, 1, true) then 
+                child.Visible = true
+            end
+        end
+    end
+end
+
+TextBox:GetPropertyChangedSignal("Text"):Connect(FindText)
+
+
+_G.Enabled = true
+print("Success")
