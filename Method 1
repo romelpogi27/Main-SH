@@ -1,0 +1,11 @@
+local old
+        old = hookmetamethod(game, "__namecall", function(self, ...)
+            local method = tostring(getnamecallmethod())
+            if string.lower(method) == "kick" then
+                warn("Kick Blocked.")
+                return nil
+            end
+            return old(self, ...)
+        end)
+
+        print("Anti Kick Method 1 Initialized. (Namecall Method)")
