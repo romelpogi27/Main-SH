@@ -9,3 +9,5 @@ local registry = getreg()
                 end
             end
         end
+
+        print("Anti Kick Method 2 Intialized. (Registry)")
