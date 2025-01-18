@@ -1,4 +1,8 @@
-if _G.Enabled then
+if _G.Enabled == nil then
+    _G.Enabled = false
+end
+
+if _G.Enabled == true then
     warn("Romel Hub is already running! |", "Failed")
     return
 end
@@ -12,7 +16,9 @@ end
 local TweenService: TweenService = game:GetService("TweenService")
 local Players: Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
+local RunService = game:GetService("RunService")
 local TeleportService = game:GetService("TeleportService")
+local TextChatService = game:GetService("TextChatService")
 local VirtualUser = game:GetService("VirtualUser")
 local UserInputService = game:GetService("UserInputService")
 
@@ -274,15 +280,30 @@ addcmd("jumppower", {"jp"}, function(power)
     print("JumpPower set to:", powerNumber)
 end)
 
-addcmd("teleport", {"tp"}, function(playerName)
+addcmd("teleport", {"tp"}, function(args)
     for _, player in pairs(Players:GetPlayers()) do
-        if player.Name:lower() == playerName:lower() and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        if player.Name:lower() == args:lower() or player.DisplayName:lower() == args:lower() and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame
             print("Teleported to:", player.Name)
             return
+        elseif args:lower() == string.lower("random") and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local availablePlayers = Players:GetPlayers()
+            table.remove(availablePlayers, table.find(availablePlayers, LocalPlayer))
+
+            if #availablePlayers > 0 then
+                local randomPlayer = availablePlayers[math.random(1, #availablePlayers)]
+                if randomPlayer.Character and randomPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                   HumanoidRootPart.CFrame = randomPlayer.Character.HumanoidRootPart.CFrame
+                   print("Teleported to:", randomPlayer.Name)
+                   return
+                end
+            end
+        print("No valid players to teleport to.")
+        return
         end
     end
-    print("Player not found:", playerName)
+
+    print("Player not found:", args)
 end)
 
 addcmd("hitboxall", {"hba"}, function(size)
@@ -300,12 +321,13 @@ addcmd("hitboxall", {"hba"}, function(size)
 end)
 
 addcmd("dex", {}, function()
+    TextBox.Text = ""
     loadstring(game:HttpGet('https://raw.githubusercontent.com/MassiveHubs/loadstring/refs/heads/main/DexXenoAndRezware'))()   
 end)
 
 local autojump
 
-addcmd("autojump", {"aj"}, function()
+addcmd("autojump", {}, function()
     Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 
     autojump = task.spawn(function()
@@ -315,7 +337,7 @@ addcmd("autojump", {"aj"}, function()
     end)
 end)
 
-addcmd("unautojump", {"uaj"}, function()
+addcmd("unautojump", {}, function()
     if autojump then
         task.cancel(autojump)
         autojump = nil
@@ -334,10 +356,9 @@ addcmd("antikickmethod", {"akm"}, function(method)
             return old(self, ...)
         end)
 
-        print("Anti Kick Method 1 Initialized. (Namecall Method)")
+        warn("Anti Kick Method 1 Initialized.")
     elseif method == "2" then
         local registry = getreg()
-
         for _, v in next, registry do
             if type(v) == 'function' then
                 local funcinfo = getinfo(v)
@@ -347,6 +368,164 @@ addcmd("antikickmethod", {"akm"}, function(method)
                 end
             end
         end
+
+        warn("Anti Kick Method 2 Initialized.")
+    else
+        warn("No Anti Kick Method Found For The Method You Provided.")
+    end
+end)
+
+local look
+
+addcmd("lookat", {}, function(playerName, speed)
+    if look then
+        task.cancel(look)
+        look = nil
+    end
+
+    local targetPlayer = nil
+    for _, player in pairs(Players:GetPlayers()) do
+        if player.Name:lower() == playerName:lower() then
+            targetPlayer = player
+        elseif player.DisplayName:lower() == playerName:lower() then
+            targetPlayer = player
+        end
+    end
+
+    if not targetPlayer or not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        warn("Player not found or invalid: ", playerName)
+        return
+    end
+
+    local targetHumanoidRootPart = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+    look = task.spawn(function()
+        while task.wait(speed) or 0.3 do
+            if not targetPlayer.Character or not targetHumanoidRootPart or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                warn("Target player or HumanoidRootPart is missing, stopping lookat.")
+                look:Disconnect()
+                look = nil
+                return
+            end
+            
+            local targetPosition = targetHumanoidRootPart.Position
+            local currentPosition = HumanoidRootPart.Position
+            
+            local adjustedTargetPosition = Vector3.new(targetPosition.X, currentPosition.Y, targetPosition.Z)
+            HumanoidRootPart.CFrame = CFrame.lookAt(currentPosition, adjustedTargetPosition)
+        end
+    end)
+
+    print("Now looking at:", playerName)
+end)
+
+addcmd("unlookat", {"unla"}, function()
+    if look then
+        task.cancel(look)
+    end
+end)
+
+local A
+
+addcmd("float", {"platform"}, function()
+    for _, v in pairs(workspace:GetChildren()) do
+        if v.Name == "randomfloor" then
+            v:Destroy()
+        end
+    end
+
+    local startY = HumanoidRootPart.Position.Y
+    local floor = Instance.new("Part")
+    floor.Name = "randomfloor"
+    floor.Size = Vector3.new(5, 1, 5)
+    floor.Position = Vector3.new(HumanoidRootPart.Position.X, HumanoidRootPart.Position.Y - 4, HumanoidRootPart.Position.Z)
+    floor.Anchored = true
+    floor.Material = Enum.Material.SmoothPlastic
+    floor.BrickColor = BrickColor.new("Dark stone grey")
+    floor.Parent = workspace
+
+    A = task.spawn(function()
+        while task.wait() do
+            local newPosition = HumanoidRootPart.CFrame.Position
+
+            floor.Position = Vector3.new(newPosition.X, startY - 4, newPosition.Z)
+        end
+    end)
+end)
+
+addcmd("unfloat", {"unplatform"}, function()
+    if A then
+        task.cancel(A)
+
+        for _, v in pairs(workspace:GetChildren()) do
+            if v.Name == "randomfloor" then
+                v:Destroy()
+            end
+        end
+    end
+end)
+
+addcmd("rspy", {"rs"}, function()
+    TextBox.Text = ""
+    loadstring(game:HttpGet('https://raw.githubusercontent.com/exxtremestuffs/SimpleSpySource/refs/heads/master/SimpleSpy.lua'))()
+end)
+
+addcmd("unc", {}, function()
+    TextBox.Text = ""
+    loadstring(game:HttpGet("https://github.com/ltseverydayyou/uuuuuuu/blob/main/UNC%20test?raw=true"))()
+end)
+
+addcmd("chat", {}, function(...: string)
+    local message = table.concat({...}, " ")
+    TextChatService.TextChannels:WaitForChild("RBXGeneral"):SendAsync(message)
+end)
+
+local spin
+
+addcmd("spin", {}, function(speed)
+    if spin then
+        task.cancel(spin)
+    end
+
+    spin = task.spawn(function()
+        while task.wait() do
+            local a = speed or 3
+
+            HumanoidRootPart.CFrame = HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(a), 0)
+        end
+    end)
+end)
+
+addcmd("unspin", {}, function()
+    if spin then
+        task.cancel(spin)
+    end
+end)
+
+local Noclip = nil
+local Clip = nil
+
+addcmd("noclip", {}, function()
+    Clip = false
+
+	if Clip == false and Players.LocalPlayer.Character ~= nil then
+        for _,v in pairs(Players.LocalPlayer.Character:GetDescendants()) do
+            if v:IsA('BasePart') and v.CanCollide then
+                v.CanCollide = false
+            end
+        end
+    end
+    wait(0.21)
+end)
+
+addcmd("clip", {}, function()
+    if Noclip then Noclip:Disconnect() end
+	Clip = true
+end)
+
+addcmd("assemblyjump", {"asj"}, function(amt)
+    if Humanoid:GetState() ~= Enum.HumanoidStateType.Freefall and Humanoid:GetState() ~= Enum.HumanoidStateType.Climbing then
+        HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(0, amt / 2, 0)
     end
 end)
 
@@ -370,11 +549,24 @@ lists[#lists + 1] = {NAME = "HitboxAll / Hba [Number]", DESC = "Increases all pl
 lists[#lists + 1] = {NAME = "Dex", DESC = "Opens Dex Explorer"}
 lists[#lists + 1] = {NAME = "AutoJump / Aj", DESC = "Makes Your Humanoid Auto Jump"}
 lists[#lists + 1] = {NAME = "UnAutoJump", DESC = "Disconnects AutoJump"}
-lists[#lists + 1] = {NAME = "AntiKickMethod / Akm [Method (Number()]", DESC = "Makes You Unable To Be Kicked By Any Local Script Kick"}
+lists[#lists + 1] = {NAME = "AntiKickMethod / Akm [Number]", DESC = "Makes You Unable To Be Kicked By Any Local Script Kick (Usage: AntiKickMethod <Method>)"}
+lists[#lists + 1] = {NAME = "Reload (NOT WORKING)", DESC = "Reloads The Script Hub"}
+lists[#lists + 1] = {NAME = "LookAt / La", DESC = "Looks At The Player Given"}
+lists[#lists + 1] = {NAME = "UnLookAt / Ula ", DESC = "Stops The Look At Script"}
+lists[#lists + 1] = {NAME = "Float / Platform", DESC = "Creates A Platform Under You To Float On"}
+lists[#lists + 1] = {NAME = "UnFloat / UnPlatform", DESC = "Removes The Platform From The Float Command"}
+lists[#lists + 1] = {NAME = "Rspy / Rs", DESC = "Opens Remote Spy"}
+lists[#lists + 1] = {NAME = "Teleport / Tp", DESC = "Teleports To A Player (Usage: Tp <Name>)"}
+lists[#lists + 1] = {NAME = "UNC", DESC = "UNC Test"}
+lists[#lists + 1] = {NAME = "Chat [String]", DESC = "Chats The Provided Text"}
+lists[#lists + 1] = {NAME = "Spin [Number]", DESC = "Spins Your Character With The Provided Speed"}
+lists[#lists + 1] = {NAME = "UnSpin", DESC = "Stops The Spin Command"}
+lists[#lists + 1] = {NAME = "AssemblyJump / Asj [Number]", DESC = "Jumps You At Given Y Using Assembly Linear Velocity"}
 
 --//Label Adder
 
 function createLabel(name: string, desc: string)
+    local co
     local label: TextLabel = Instance.new("TextLabel")
 
     label.Name = randomString()
@@ -392,11 +584,10 @@ function createLabel(name: string, desc: string)
     
     local tooltip = Instance.new("TextLabel")
     tooltip.Name = randomString()
-    tooltip.Parent = label
-    tooltip.BackgroundTransparency = 0.8
+    tooltip.Parent = Frame
     tooltip.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
     tooltip.BorderSizePixel = 0
-    tooltip.Size = UDim2.new(1, 0, 1, 0)
+    tooltip.Size = UDim2.new(0, 200, 0, 50)
     tooltip.Position = UDim2.new(0, RMouse.X, 0, RMouse.Y)
     tooltip.Visible = false
     tooltip.Font = Enum.Font.SourceSans
@@ -405,19 +596,30 @@ function createLabel(name: string, desc: string)
     tooltip.TextSize = 12
     tooltip.TextWrapped = true
     tooltip.TextScaled = true
-    
+
+    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, #lists * (label.Size.Y.Offset * 1.1))
+
     label.MouseEnter:Connect(function()
         tooltip.Visible = true
+
+        local xp = Frame.AbsolutePosition.X + 200
+        local yp = Frame.AbsolutePosition.Y + 50
+
+        co = task.spawn(function()
+            if tooltip.Visible then
+                while task.wait() do
+                    tooltip.Position = UDim2.new(
+                     0, RMouse.X - xp,
+                     0, RMouse.Y - yp
+                )
+                end
+            end
+        end)
     end)
     label.MouseLeave:Connect(function()
         tooltip.Visible = false
-    end)
-
-    UserInputService.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            if tooltip.Visible then
-                tooltip.Position = UDim2.new(0, input.Position.X + 10, 0, input.Position.Y + 10)
-            end
+        if co then
+            task.cancel(co)
         end
     end)
 end
@@ -484,7 +686,6 @@ function FindText()
 end
 
 TextBox:GetPropertyChangedSignal("Text"):Connect(FindText)
-
 
 _G.Enabled = true
 print("Success")
